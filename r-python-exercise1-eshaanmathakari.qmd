@@ -1,0 +1,166 @@
+---
+title: "r-python exercise-1 eshaanmathakari"
+format: html
+editor: visual
+Author: Eshaan Mathakari
+Description: Performing basic arithmetic and summarising functions in R for Exercise 1 HomeWork
+---
+
+# Installing packages
+```{r}
+#install.packages("pacman")
+library(pacman)
+
+p_load(dlookr,
+       DMwR2, 
+       GGally, # Pair-wise plots using ggplot2
+       Hmisc, # Data analysis 
+       palmerpenguins, 
+       tidyverse)
+```
+
+# Loading Datasets into our file
+```{r}
+data(algae, package = "DMwR2")
+
+algae |> glimpse()
+```
+
+## Finding mean
+```{r}
+algae$a1 |>
+  mean()
+```
+
+## Finding median
+```{r}
+algae$a1 |>
+  median()
+```
+
+## Finding mode
+```{r}
+Mode <- function(x, na.rm=FALSE){
+if(na.rm) x<-x[!is.na(x)]
+ux <- unique (x)
+return (ux[which.max(tabulate(match(x, ux)))])
+}
+
+algae$a2 |> Mode()
+```
+
+## Using the centralValue function from DMwR
+```{r}
+algae$a1 |> centralValue()
+algae$speed |> centralValue()
+```
+
+## Finding the variance in dataset Algae
+```{r}
+algae$a1 |> var()
+```
+
+## Finding the Standard deviation in dataset Algae
+```{r}
+algae$a1 |> sd()
+```
+
+# Computing basic functions like min, max, range
+```{r}
+algae$a1 |> range()
+algae$a1 |> max()
+algae$a1 |> min()
+```
+
+## Finding Quartile and InterQuartile range
+```{r}
+algae$a1 |> IQR()
+algae$a1 |> quantile()
+algae$a1 |> quantile(probs = c(0.2, 0.8))
+```
+
+# Finding the missing values and incomplete rows in Dataset
+```{r}
+library(dplyr)
+library(purrr)
+# Compute the total number of NA values in the dataset
+nas <- algae %>% 
+  purrr::map_dbl(~sum(is.na(.))) %>% 
+  sum()
+
+cat("The dataset contains ", nas, "NA values. \n")
+incomplete_rows <- algae %>% 
+  summarise_all(~!complete.cases(.)) %>%
+  nrow()
+```
+
+```{r}
+cat("The dataset contains ", incomplete_rows, "(out of ", nrow(algae),") incomplete rows. \n")
+```
+
+## Summarising the dataset using the summary function
+```{r}
+algae |> summary()
+```
+
+# Using different Describe functions on PalmerPenguins Dataset
+```{r}
+install.packages("palmerpenguins")
+library(palmerpenguins)
+data("penguins")
+```
+
+## HMISC Describe function
+```{r}
+penguins |> Hmisc::describe()
+```
+
+## DLOOKR Describe function
+```{r}
+penguins |> dlookr::describe()
+```
+
+# Summarising the subsets of data
+```{r}
+algae |>
+  summarise(avgNO3 = mean(NO3, na.rm=TRUE),
+            medA1 = median(a1))
+```
+
+```{r}
+algae |>
+  select(mxPH:Cl) |>
+  summarise_all(list(mean, median), na.rm = TRUE)
+```
+
+```{r}
+algae |>
+  select(a1:a7) |>
+  summarise_all(funs(var))
+```
+
+```{r}
+algae |>
+  select(a1:a7) |>
+  summarise_all(c("min", "max"))
+```
+
+# Summarising our data by group
+```{r}
+algae |>
+  group_by(season, size) |>
+  summarise(nObs = n(), mA7 = median(a7))
+penguins |> 
+  group_by(species) |>
+  summarise(var = var(bill_length_mm, na.rm = TRUE))
+```
+
+# Aggregating Data based on their bill length
+```{r}
+penguins |>
+  group_by(species) |>
+  reframe(var = quantile(bill_length_mm, na.rm = TRUE))
+penguins |>
+  group_by(species) |>
+  dlookr::describe(bill_length_mm)
+```
